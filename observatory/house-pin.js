@@ -49,29 +49,33 @@ window.AtlasHouse = (() => {
   function mount({world,panel,onFocus,onLeave}) {
     let point=readPin(),active=false,archived=false,time=null,grid=null,request=null,lastRequest=0,loadError=false;
     let candidate=null,center={...city},span=.32,drag=null,focusReturn=null,storageNote='',stored=!!point;
+    let locationRequest=null;
     panel.classList.add('house-readout');
     panel.hidden=true;
-    panel.innerHTML=`<h2>My house</h2><p data-location></p><div class="house-actions">
+    panel.innerHTML=`<h2>My location</h2><p data-location></p><div class="house-actions">
       <button type="button" data-return>Return to pin</button><button type="button" data-edit>Change pin</button>
       <button type="button" data-forget>Forget pin</button></div>
       <p data-storage role="status" hidden></p><h3>Nearby weather</h3><p data-source></p>
       <dl class="house-metrics" hidden></dl>`;
     const dialog=document.createElement('dialog');
     dialog.className='house-editor';
-    dialog.setAttribute('aria-label','Set my house pin');
-    dialog.innerHTML=`<div class="house-heading"><h2>Pin my house</h2><button type="button" data-close aria-label="Close pin editor">×</button></div>
-      <p>Tap the map to place your pin. Drag to move the map.</p>
-      <div class="house-map" aria-label="Satellite map around Chiang Mai">
+    dialog.setAttribute('aria-labelledby','house-picker-title');
+    dialog.innerHTML=`<div class="house-heading"><div><h2 id="house-picker-title">Your map pin</h2><p>Your pin stays in this browser.</p></div>
+      <button type="button" data-close aria-label="Close pin editor" autofocus>×</button></div>
+      <div class="house-choices">
+      <button type="button" data-geolocate><span class="house-target" aria-hidden="true"></span><span>Use my location</span></button>
+      <div class="house-map-group"><p>Tap to place a pin. Drag to move the map.</p>
+      <div class="house-map" role="group" aria-label="Satellite map around Chiang Mai">
         <img data-province alt="" draggable="false"><img data-basin alt="" draggable="false"><div data-labels aria-hidden="true"></div>
         <i class="house-marker" hidden></i><span class="house-north" aria-hidden="true">↑ N</span>
         <div class="house-zoom"><button type="button" data-in aria-label="Zoom in on map">+</button><button type="button" data-out aria-label="Zoom out on map">−</button></div>
-        <small>Sentinel-2 cloudless 2024 · EOX / Copernicus</small></div>
-      <label>Latitude, longitude<input type="text" data-coords autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="18.79000, 98.99000"></label>
-      <p class="house-help" data-message role="status">You can also paste decimal coordinates.</p>
-      <div class="house-footer"><small>Stored only in this browser.</small><button type="button" data-save>Save pin</button></div>`;
+        <small>Sentinel-2 cloudless 2024 · EOX / Copernicus</small></div></div>
+      <label>Latitude, longitude<input type="text" data-coords autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-describedby="house-picker-message" placeholder="18.79000, 98.99000"></label>
+      </div><div class="house-footer"><p id="house-picker-message" data-message role="status" aria-atomic="true"></p><button type="button" data-save>Save pin</button></div>`;
     const find=(root,selector)=>root.querySelector(selector);
     const d=s=>find(dialog,s), q=s=>find(panel,s);
     const map=d('.house-map'),input=d('[data-coords]'),save=d('[data-save]'),pin=d('.house-marker');
+    const locate=d('[data-geolocate]'),message=d('[data-message]');
     const labelNodes=landmarks.map(([label,lon,lat])=>{
       const node=document.createElement('span');node.textContent=label;d('[data-labels]').append(node);
       return {node,lon,lat};
@@ -102,21 +106,66 @@ window.AtlasHouse = (() => {
       if(!pin.hidden)pos(pin,candidate.lon,candidate.lat);
       d('[data-in]').disabled=span<=.025;d('[data-out]').disabled=span>=province[2]-province[0];
     }
-    function setCandidate(p,fromMap) {
+    function endLocationRequest() {
+      if(!locationRequest)return;
+      clearTimeout(locationRequest.timer);
+      locationRequest=null;
+      locate.removeAttribute('aria-busy');
+      locate.removeAttribute('aria-disabled');
+      locate.lastElementChild.textContent='Use my location';
+      save.disabled=!candidate;
+    }
+    function setCandidate(p,writeInput) {
+      endLocationRequest();
       candidate=contains(p,province)?p:null;save.disabled=!candidate;
-      if(fromMap&&candidate)input.value=pair(candidate);
+      if(writeInput&&candidate)input.value=pair(candidate);
       input.setAttribute('aria-invalid',String(!!input.value&&!candidate));
-      d('[data-message]').textContent=candidate?'Ready to save.':!input.value?'You can also paste decimal coordinates.':
+      message.textContent=candidate?'Pin selected. Save when ready.':!input.value?'Choose a location or paste coordinates.':
         p?'Choose a point inside the Chiang Mai atlas area.':'Enter latitude first, then longitude, as two decimal numbers.';
-      if(candidate&&!fromMap&&!contains(candidate,bounds()))center={...candidate};
+      if(candidate&&!writeInput&&!contains(candidate,bounds()))center={...candidate};
       renderMap();
     }
+    locate.onclick=()=>{
+      if(locationRequest||!dialog.open)return;
+      const manual='Tap the map or paste coordinates.';
+      if(!window.isSecureContext){message.textContent='Device location needs a secure page. '+manual;return}
+      if(!navigator.geolocation){message.textContent='Device location is unavailable. '+manual;return}
+      const lookup={};
+      locationRequest=lookup;
+      locate.setAttribute('aria-busy','true');
+      locate.setAttribute('aria-disabled','true');
+      locate.lastElementChild.textContent='Locating…';
+      save.disabled=true;
+      message.textContent='Waiting for your device. You can still place a pin manually.';
+      function fail(code) {
+        if(locationRequest!==lookup||!dialog.open)return;
+        endLocationRequest();
+        const reason=code===1?'Location access was denied.':code===3?'Location request timed out.':'Your device could not find a location.';
+        message.textContent=reason+' '+manual;
+      }
+      // The native timeout may exclude time spent waiting for permission.
+      lookup.timer=setTimeout(()=>fail(3),18000);
+      try{
+        navigator.geolocation.getCurrentPosition(({coords})=>{
+          if(locationRequest!==lookup||!dialog.open)return;
+          endLocationRequest();
+          const p={lat:coords.latitude,lon:coords.longitude};
+          if(!contains(p,province)){message.textContent='Your device is outside the Chiang Mai map. '+manual;return}
+          center={...p};span=.15;
+          setCandidate({lat:Number(p.lat.toFixed(5)),lon:Number(p.lon.toFixed(5))},true);
+          const meters=coords.accuracy;
+          const accuracy=Number.isFinite(meters)&&meters>0 ? ' (±'+(meters<1000?Math.ceil(meters)+' m':(meters/1000).toFixed(1)+' km')+')' : '';
+          message.textContent='Location found'+accuracy+'. Check the pin, then save.';
+        },error=>fail(error.code),{enableHighAccuracy:true,maximumAge:30000,timeout:12000});
+      }catch{fail(2)}
+    };
     function zoom(factor) {
       span=clamp(span*factor,.025,province[2]-province[0]);renderMap();
     }
     d('[data-in]').onclick=()=>zoom(.55);d('[data-out]').onclick=()=>zoom(1/.55);
     map.onpointerdown=e=>{
       if(e.button!==0||e.target.closest('button')||drag)return;
+      if(locationRequest)setCandidate(parse(input.value),false);
       drag={id:e.pointerId,x:e.clientX,y:e.clientY,center:{...center},bounds:bounds(),moved:false};
       map.setPointerCapture(e.pointerId);
     };
@@ -136,8 +185,16 @@ window.AtlasHouse = (() => {
     };
     map.onpointercancel=()=>{drag=null};map.onlostpointercapture=()=>{drag=null};
     input.oninput=()=>setCandidate(parse(input.value),false);
-    input.onkeydown=e=>{if(e.key==='Enter'&&!save.disabled){e.preventDefault();save.click()}};
+    input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(save.disabled)input.blur();else save.focus()}};
     const mapResize=new ResizeObserver(renderMap);mapResize.observe(map);
+    const viewport=window.visualViewport;
+    function fitViewport() {
+      if(!dialog.open||!viewport)return;
+      dialog.style.setProperty('--house-height',viewport.height+'px');
+      dialog.style.setProperty('--house-top',viewport.offsetTop+'px');
+    }
+    viewport?.addEventListener('resize',fitViewport);
+    viewport?.addEventListener('scroll',fitViewport);
     function edit() {
       if(dialog.open)return;
       focusReturn=document.activeElement;
@@ -147,10 +204,16 @@ window.AtlasHouse = (() => {
         d('[data-basin]').src=new URL('world-basin.jpg',assets).href;
       }
       center={...(point||city)};span=point ? .15 : .32;
-      input.value=point?pair(point):'';dialog.showModal();setCandidate(point,false);
+      drag=null;input.value=point?pair(point):'';
+      dialog.showModal();fitViewport();d('.house-choices').scrollTop=0;
+      setCandidate(point,false);
+      if(point)message.textContent='Your saved pin. Choose a new spot to move it.';
     }
     d('[data-close]').onclick=()=>dialog.close();
-    dialog.addEventListener('close',()=>{drag=null;input.value='';candidate=null;focusReturn?.focus({preventScroll:true})});
+    dialog.addEventListener('close',()=>{
+      if(dialog.open)return;
+      endLocationRequest();drag=null;input.value='';candidate=null;focusReturn?.focus({preventScroll:true});
+    });
     function weather() {
       const status=q('[data-source]'),metrics=q('.house-metrics');
       metrics.hidden=true;

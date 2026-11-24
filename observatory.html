@@ -1,20 +1,97 @@
 <!doctype html>
-<html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; connect-src 'self' https://api.open-meteo.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="robots" content="noindex, nofollow, noimageindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#162a2c"><title>Chiang Mai Weather Atlas · 3D explorer</title><link rel="stylesheet" href="observatory/friends.css"><link rel="stylesheet" href="observatory/house-pin.css"></head>
-<body class="explorer"><header class="mast"><a href="index.html">Chiang Mai <b>Weather Atlas</b></a><a href="index.html">Field guide ↗</a></header>
-<main class="workspace"><section class="map-col" aria-label="Terrain and weather">
-  <nav class="locations" aria-label="Map destinations"><button data-place="window" aria-pressed="true">Basin</button><button data-place="crag">Crazy Horse</button><button data-place="province">Province</button><button data-place="region">Southeast Asia</button><button data-place="global">Globe</button><button id="my-house">My house</button></nav>
-  <div id="orbit"></div><div id="house-panel" hidden></div>
-  <div class="timebox"><div class="weather-source"><label>Weather <select id="weather-source"><option value="live">Current forecast</option><option value="replay">Saved replay</option></select></label><button type="button" id="refresh-weather">Refresh forecast</button></div><p id="weather-status" role="status" aria-live="polite"></p><div class="timehead"><strong id="valid">Loading weather…</strong><span>Chiang Mai time · ICT</span></div>
-  <div class="scrub"><button id="previous" aria-label="Previous hour">−1h</button><button id="play" aria-label="Play weather hours">Play</button><button id="next" aria-label="Next hour">+1h</button><input type="range" id="weather-hour" aria-label="Weather hour" min="0" max="0" value="0" disabled></div><div class="range-ends"><span id="from"></span><span id="to"></span></div></div>
-</section><aside class="inspector">
-  <h1>Explore the atlas</h1>
-  <fieldset><legend>Map layers</legend><div class="switches">
-    <label><input type="checkbox" id="cloud" checked>Clouds</label><label><input type="checkbox" id="wind" checked>Wind</label><label><input type="checkbox" id="localRain">Hourly rain</label><label><input type="checkbox" id="sunPath">Sun path</label><label><input type="checkbox" id="shadows">Shadows</label><label><input type="checkbox" id="roads">Roads</label><label><input type="checkbox" id="rivers">Rivers</label><label><input type="checkbox" id="labels" checked>Place labels</label>
-  </div><label class="setting">Cloud height<select id="band"><option value="all">All bands</option><option value="low">Low</option><option value="mid">Middle</option><option value="high">High</option></select></label><label class="setting">Wind level<select id="level"><option>925</option><option selected>850</option><option>700</option><option>500</option><option>300</option></select> hPa</label><label class="setting">Drag mode<select id="gesture"><option value="orbit">Rotate</option><option value="pan">Move</option></select></label></fieldset>
-  <fieldset><legend>Regional weather</legend><label class="setting">Chart<select id="systems"><option value="terrain">Terrain &amp; clouds</option><option value="composite">Weather systems</option><option value="low">Low cloud</option><option value="mid">Middle cloud</option><option value="high">High cloud</option><option value="pressure">Pressure</option><option value="precip">Six-hour rain</option></select></label><small id="regional-time"></small></fieldset>
-  <fieldset><legend>Sun and terrain</legend><div class="actions"><button id="sunset">Face sunset</button><button id="recenter">Orbit terrain</button></div><label class="solar">Solar time <output id="solar-at"></output><input type="range" id="minute" min="0" max="1439" value="720" aria-label="Solar time of day"></label><button class="quiet" id="solar-reset">Use weather hour</button><small id="solar-site"></small></fieldset>
-  <details id="samples"><summary>Model cells &amp; airport report</summary><label class="setting">ICON cell<select id="cell"></select></label><p id="cell-report"></p><p id="airport"></p><small>ICON values represent a fixed model cell. VTCC observations come from Chiang Mai International Airport.</small></details>
-  <small id="archive-info"></small><a class="credits" href="index.html#credits">Data &amp; imagery credits ↗</a>
-</aside></main><noscript>The map needs JavaScript. The field guide also works without it.</noscript>
-<script src="observatory/world-data.js"></script><script src="observatory/scales-data.js"></script><script src="observatory/crag-terrain.js"></script><script src="observatory/cloud-gpu.js"></script><script src="observatory/cloud-light.js"></script><script src="observatory/sun.js"></script><script src="observatory/province-clouds.js"></script><script src="observatory/world.js"></script><script src="observatory/rain-marks.js"></script><script src="observatory/house-pin.js"></script><script src="observatory/friends.js"></script>
-</body></html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; connect-src 'self' https://api.open-meteo.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="robots" content="noindex, nofollow, noimageindex">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#172b29">
+  <title>Chiang Mai Weather Atlas · 3D explorer</title>
+  <link rel="stylesheet" href="observatory/friends.css?v=c3d98288d8d1">
+  <link rel="stylesheet" href="observatory/house-pin.css?v=834de367db9d">
+  <link rel="stylesheet" href="observatory/weather-track.css?v=70bdc1a240b3">
+</head>
+<body class="explorer">
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="i-terrain" viewBox="0 0 32 32"><path d="m2 23 9-15 5 8 4-6 10 16H2m6-8 3-3 3 2m4 0 2-2 3 4"/></symbol>
+    <symbol id="i-guide" viewBox="0 0 24 24"><path d="M12 6c-3-2-6-2-9-1v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Zm0 0v14"/></symbol>
+    <symbol id="i-places" viewBox="0 0 24 24"><path d="m3 5 6-2 6 3 6-2v15l-6 2-6-3-6 2V5Zm6-2v15m6-12v15"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5-9-5Zm0 5 9 5 9-5M3 18l9 5 9-5" transform="translate(0 -1)"/></symbol>
+    <symbol id="i-time" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M2 17h20M4 21h16M6.5 17a5.5 5.5 0 0 1 11 0M12 4v3M3 9l2 2m16-2-2 2"/></symbol>
+    <symbol id="i-location" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </svg>
+  <header class="mast">
+    <a class="brand" href="field-guide.html"><svg class="atlas-icon" aria-hidden="true"><use href="#i-terrain"/></svg><span>Chiang Mai <b>Weather Atlas</b></span></a>
+    <a id="field-guide" href="field-guide.html"><svg class="atlas-icon" aria-hidden="true"><use href="#i-guide"/></svg>Field guide</a>
+  </header>
+  <main class="workspace">
+    <section class="map-col" aria-label="Terrain and weather">
+      <section id="sheet-places" class="map-sheet" aria-labelledby="title-places">
+        <div class="sheet-heading"><h2 id="title-places" tabindex="-1">Places</h2><button type="button" data-close-sheet aria-label="Close places"><svg class="atlas-icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+        <div class="sheet-scroll">
+          <nav class="locations" aria-label="Map destinations">
+            <button data-place="window" aria-pressed="true">Basin</button>
+            <button data-place="crag">Crazy Horse</button>
+            <button data-place="province">Province</button>
+            <button data-place="region">Southeast Asia</button>
+            <button data-place="global">Globe</button>
+            <button id="my-house" type="button"><svg class="atlas-icon" aria-hidden="true"><use href="#i-location"/></svg>My location</button>
+          </nav>
+          <div id="mobile-house-readout"></div>
+        </div>
+      </section>
+      <div id="orbit"></div>
+      <div id="house-panel" hidden></div>
+      <section class="timebox map-sheet" id="sheet-time" aria-labelledby="title-time">
+        <div class="sheet-heading"><h2 id="title-time" tabindex="-1">Weather time</h2><button type="button" data-close-sheet aria-label="Close weather time"><svg class="atlas-icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+        <div class="sheet-scroll">
+          <div class="timehead"><strong id="valid">Loading weather…</strong><span>Chiang Mai time · ICT</span></div>
+          <div id="weather-track"></div>
+          <div class="scrub"><button id="previous" aria-label="Previous hour">−1h</button><button id="play" aria-label="Play weather hours" aria-pressed="false">Play</button><button id="next" aria-label="Next hour">+1h</button><input type="range" id="weather-hour" aria-label="Weather hour" min="0" max="0" value="0" disabled></div>
+          <div class="range-ends"><span id="from"></span><span id="to"></span></div>
+          <div class="weather-source"><label>Weather <select id="weather-source"><option value="live">Current forecast</option><option value="replay">Saved replay</option></select></label><button type="button" id="refresh-weather">Refresh forecast</button></div>
+          <p id="weather-status" role="status" aria-live="polite"></p>
+          <div id="mobile-model-report"></div>
+        </div>
+      </section>
+    </section>
+    <aside class="inspector">
+      <h1>Explore the atlas</h1>
+      <section class="map-sheet" id="sheet-layers" aria-labelledby="title-layers">
+        <div class="sheet-heading"><h2 id="title-layers" tabindex="-1">Map layers</h2><button type="button" data-close-sheet aria-label="Close layers"><svg class="atlas-icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+        <div class="sheet-scroll">
+          <fieldset><legend>Map layers</legend><div class="switches">
+            <label><input type="checkbox" id="cloud" checked>Clouds</label><label><input type="checkbox" id="wind" checked>Wind</label><label><input type="checkbox" id="localRain">Hourly rain</label><label><input type="checkbox" id="sunPath">Sun path</label><label><input type="checkbox" id="shadows">Shadows</label><label><input type="checkbox" id="roads">Roads</label><label><input type="checkbox" id="rivers">Rivers</label><label><input type="checkbox" id="labels" checked>Place labels</label>
+          </div>
+          <label class="setting">Cloud height<select id="band"><option value="all">All bands</option><option value="low">Low</option><option value="mid">Middle</option><option value="high">High</option></select></label>
+          <label class="setting">Wind level <select id="level"><option>925</option><option selected>850</option><option>700</option><option>500</option><option>300</option></select> hPa</label>
+          <label class="setting">Drag mode<select id="gesture"><option value="orbit">Rotate</option><option value="pan">Move</option></select></label></fieldset>
+          <fieldset><legend>Regional weather</legend><label class="setting">Chart<select id="systems"><option value="terrain">Terrain &amp; clouds</option><option value="composite">Weather systems</option><option value="low">Low cloud</option><option value="mid">Middle cloud</option><option value="high">High cloud</option><option value="pressure">Pressure</option><option value="precip">Six-hour rain</option></select></label><small id="regional-time"></small></fieldset>
+          <details id="map-notes" class="mobile-only"><summary>Map notes &amp; imagery</summary><p></p><a class="credits" href="field-guide.html#credits">Data &amp; imagery credits ↗</a></details>
+        </div>
+      </section>
+      <section class="map-sheet" id="sheet-sun" aria-labelledby="title-sun">
+        <div class="sheet-heading"><h2 id="title-sun" tabindex="-1">Sun and terrain</h2><button type="button" data-close-sheet aria-label="Close sun and terrain"><svg class="atlas-icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+        <div class="sheet-scroll"><fieldset><legend>Sun and terrain</legend><div class="actions"><button id="sunset">Face sunset</button><button id="recenter">Orbit terrain</button></div><label class="solar">Solar time <output id="solar-at"></output><input type="range" id="minute" min="0" max="1439" value="720" aria-label="Solar time of day"></label><button class="quiet" id="solar-reset">Use weather hour</button><small id="solar-site"></small></fieldset></div>
+      </section>
+      <div id="model-report"><details id="samples"><summary>Model cells &amp; airport report</summary><label class="setting">ICON cell<select id="cell"></select></label><p id="cell-report"></p><p id="airport"></p><small>ICON values represent a fixed model cell. VTCC observations come from Chiang Mai International Airport.</small></details><small id="archive-info"></small></div>
+      <a class="credits" href="field-guide.html#credits">Data &amp; imagery credits ↗</a>
+    </aside>
+  </main>
+  <div class="phone-console mobile-only">
+    <div class="map-summary">
+      <button class="map-reading" type="button" id="weather-glance" aria-controls="sheet-time" aria-expanded="false"><strong id="map-place">Chiang Mai basin</strong><span id="map-time">Loading weather…</span><span id="map-weather" hidden></span></button>
+      <div id="mobile-location"></div>
+    </div>
+    <nav id="map-dock" aria-label="Map controls">
+      <button type="button" data-sheet="places" aria-controls="sheet-places" aria-expanded="false"><svg class="atlas-icon" aria-hidden="true"><use href="#i-places"/></svg>Places</button>
+      <button type="button" data-sheet="layers" aria-controls="sheet-layers" aria-expanded="false"><svg class="atlas-icon" aria-hidden="true"><use href="#i-layers"/></svg>Layers</button>
+      <button type="button" data-sheet="time" aria-controls="sheet-time" aria-expanded="false"><svg class="atlas-icon" aria-hidden="true"><use href="#i-time"/></svg>Time</button>
+      <button type="button" data-sheet="sun" aria-controls="sheet-sun" aria-expanded="false"><svg class="atlas-icon" aria-hidden="true"><use href="#i-sun"/></svg>Sun</button>
+    </nav>
+  </div>
+  <noscript>The map needs JavaScript. <a href="field-guide.html">Open the field guide.</a></noscript>
+  <script src="observatory/world-data.js"></script><script src="observatory/scales-data.js"></script><script src="observatory/crag-terrain.js"></script><script src="observatory/cloud-gpu.js"></script><script src="observatory/cloud-light.js"></script><script src="observatory/sun.js"></script><script src="observatory/province-clouds.js"></script><script src="observatory/world.js"></script><script src="observatory/rain-marks.js"></script><script src="observatory/house-pin.js?v=1ad42b9aadf1"></script><script src="observatory/weather-track.js?v=5f9d6fee9ff8"></script><script src="observatory/friends.js?v=1759942496c4"></script>
+</body>
+</html>
