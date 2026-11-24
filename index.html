@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'sha256-xn8IYVAVYwqFWPfPCbntlvoXPFOeqC4NJc8bi4zVxy8='; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'"><meta name="robots" content="noindex, nofollow, noimageindex"><meta name="referrer" content="no-referrer"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><script>(function () {
+  const root = document.documentElement;
+  try {
+    const saved = localStorage.getItem('page-render-theme');
+    if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+  } catch (error) {}
+  document.addEventListener('DOMContentLoaded', function () {
+    const button = document.querySelector('.theme-switch');
+    const system = matchMedia('(prefers-color-scheme: dark)');
+    function dark() { return root.dataset.theme ? root.dataset.theme === 'dark' : system.matches; }
+    function paint() {
+      button.textContent = dark() ? 'Light' : 'Dark';
+      button.setAttribute('aria-label', 'Switch to ' + (dark() ? 'light' : 'dark') + ' mode');
+    }
+    button.addEventListener('click', function () {
+      root.dataset.theme = dark() ? 'light' : 'dark';
+      try { localStorage.setItem('page-render-theme', root.dataset.theme); } catch (error) {}
+      paint();
+    });
+    system.addEventListener('change', paint);
+    paint();
+  });
+})();
+</script><title>Chiang Mai Weather Atlas</title><style>
+:root{--bg:#f3f0e9;--panel:#fbfaf6;--ink:#191817;--mut:#68635c;--hair:#d9d3c7;--track:#e7e2d7;--acc:#d9531e;--accs:#f8e3d6;--good:#2f7d4f;--goods:#f1f5ef;--warn:#805700;--warns:#f5ecd6;--bad:#b23a2e;--bads:#f7e8e4;--info:#435b72;--infos:#e7edf2;--font:"Inter","Helvetica Neue",Arial,sans-serif;--mono:"Inter","Helvetica Neue",Arial,sans-serif;--display:"Space Grotesk","Helvetica Neue",Arial,sans-serif;--code:"JetBrains Mono",ui-monospace,Menlo,monospace;--r:8px;--rs:6px;--pad:16px;--weight:700}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d0e10;--panel:#141518;--ink:#ece8e1;--mut:#8b8780;--hair:#24262a;--track:#17181b;--acc:#f2a541;--accs:#302415;--good:#5cc47e;--goods:#14291b;--warn:#f2c14e;--warns:#211b0d;--bad:#ef6a5a;--bads:#301a18;--info:#9bbad8;--infos:#192633}}
+:root[data-theme="dark"]{--bg:#0d0e10;--panel:#141518;--ink:#ece8e1;--mut:#8b8780;--hair:#24262a;--track:#17181b;--acc:#f2a541;--accs:#302415;--good:#5cc47e;--goods:#14291b;--warn:#f2c14e;--warns:#211b0d;--bad:#ef6a5a;--bads:#301a18;--info:#9bbad8;--infos:#192633}
+.theme-switch{position:absolute;top:20px;right:16px;background:var(--panel);color:var(--ink);border:1px solid var(--hair);border-radius:20px;padding:6px 12px;font-size:12px;min-height:32px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gallery-caption{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff}:root:not([data-theme="light"]) .gallery-caption small{color:#cfcac2}:root:not([data-theme="light"]) .gallery-heading h2{font-family:"Archivo",sans-serif;text-transform:uppercase;letter-spacing:.02em;font-weight:800}}
+:root[data-theme="dark"] .gallery-caption{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:#fff}:root[data-theme="dark"] .gallery-caption small{color:#cfcac2}:root[data-theme="dark"] .gallery-heading h2{font-family:"Archivo",sans-serif;text-transform:uppercase;letter-spacing:.02em;font-weight:800}
+*{box-sizing:border-box;min-width:0}
+html{-webkit-text-size-adjust:100%;overflow-wrap:anywhere}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--font);font-style:normal}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 16px 64px}
+h1{font:var(--weight) clamp(30px,6vw,52px)/1.05 var(--display);letter-spacing:-.01em;margin:6px 0 10px}
+h2{font:var(--weight) 26px/1.15 var(--display);letter-spacing:-.01em;margin:0 0 4px}
+h3{font:700 18px/1.25 var(--font);margin:0 0 6px}
+p{margin:8px 0 12px}code{font-family:var(--code);font-size:.82em;overflow-wrap:anywhere}
+a{color:var(--acc);text-underline-offset:2px}a:focus-visible,summary:focus-visible,.tscroll:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+section{padding:36px 0 8px;border-top:1px solid var(--hair);margin-top:28px}
+.block{margin-bottom:18px}.block-label{margin-bottom:10px}
+.eyebrow{font:600 12px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--mut)}
+.lab{font:600 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.sub{color:var(--mut);margin:0 0 18px;max-width:64ch}.verdict,.size-lead{font-size:19px;max-width:60ch}
+.panel{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:16px}
+.tone-accent{--tone:var(--acc);--soft:var(--accs)}.tone-good{--tone:var(--good);--soft:var(--goods)}
+.tone-warn{--tone:var(--warn);--soft:var(--warns)}.tone-bad{--tone:var(--bad);--soft:var(--bads)}
+.tone-info{--tone:var(--info);--soft:var(--infos)}.tone-mute{--tone:var(--mut);--soft:var(--track)}
+.flow-row{list-style:none;padding:0;margin:14px 0 18px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:14px}
+.node{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0}
+.node .step{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--tone);font:600 13px/30px var(--mono);text-align:center;flex:0 0 30px}
+.node:not(:last-child)::after{content:"";position:absolute;top:15px;left:40px;right:-4px;height:2px;border-radius:1px;background:var(--hair)}
+.node .body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.node .k{font:600 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--mut)}.node .v{font-size:15px;font-weight:500;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:10px;margin:14px 0}
+.tile{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:14px}
+.tile .n{font:var(--weight) clamp(26px,4.6vw,38px)/1 var(--display);letter-spacing:-.01em;color:var(--tone)}
+.tile .t{font-size:13px;color:var(--mut);margin-top:6px}.tile.tone-warn,.tile.tone-bad{background:var(--soft)}
+.brow{display:flex;flex-direction:column;gap:6px;margin:12px 0;font-size:14px}.brow:first-child{margin-top:0}
+.bhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bs{width:100%;height:10px;display:block;overflow:visible}.bl{color:var(--ink)}
+.bv{font:600 14px/1.2 var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right;white-space:nowrap}
+.track{fill:var(--track)}.fill{fill:var(--tone)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:8px}.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-inline-end:5px;vertical-align:-1px;background:var(--tone)}
+.tag{display:inline-block;font:600 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:6px 9px;border-radius:var(--rs);background:var(--tone);color:var(--panel)}.threshold{stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.card-grid{display:grid;gap:14px;margin-top:14px}.card{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:var(--pad)}
+.card.compact{padding:14px}.chead{position:relative}.ranked>.chead{padding-inline-start:60px;min-height:46px}
+.rank{position:absolute;inset-inline-start:0;top:0;font:var(--weight) 46px/.9 var(--display);letter-spacing:-.01em;color:var(--acc);max-width:54px;overflow-wrap:anywhere}
+.meta{display:flex;gap:6px;flex-wrap:wrap}.chip{display:inline-block;font-size:12px;padding:3px 8px;border-radius:var(--rs);background:var(--soft);color:var(--tone)}
+h2 .chip{font:600 11px/1.3 var(--mono);text-transform:uppercase;vertical-align:middle;letter-spacing:.08em}
+.today{font-size:14.5px;margin:12px 0 10px}.today .lab{margin-inline-end:6px}.facts{margin:6px 0 8px;padding-inline-start:18px;font-size:14px}.facts li{margin:3px 0}
+.fold{margin-top:10px;font-size:14px}.fold summary{cursor:pointer;color:var(--acc);font-weight:600}.fold p{color:var(--mut);margin:8px 0 0}
+.callout-panel{background:var(--soft);border-radius:var(--r);padding:var(--pad)}.callout-panel .lab{color:var(--tone);margin-bottom:8px}
+.nogrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.nogrid .chip{font-size:13px;border:1px solid var(--hair);padding:4px 8px}
+.xrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:10px;margin-top:8px}
+.xcard{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:12px;font-size:13.5px}.xcard p{margin:5px 0 6px}.xwho{font-weight:700}.xd{font-weight:400;color:var(--mut);font-size:12px;margin-inline-start:4px}
+.twocol,.cols-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols-1{grid-template-columns:minmax(0,1fr)}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:480px}
+th{font:600 11px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mut);text-align:left;padding:8px;border-bottom:1px solid var(--hair)}
+td{padding:9px 8px;border-bottom:1px solid var(--hair);vertical-align:top;max-width:400px}td[class^=tone-]{color:var(--tone)}.numeric{text-align:right;font-variant-numeric:tabular-nums}.m{color:var(--mut);font-size:13px}.tscroll{overflow-x:auto;max-width:100%}
+.gloss{display:flex;gap:8px 18px;flex-wrap:wrap;font-size:13.5px;color:var(--mut);margin:14px 0 0}.gloss b{color:var(--ink)}
+.image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(var(--image-min),100%),1fr));gap:14px}
+figure{margin:0}.image-box{aspect-ratio:8/5;background:var(--track);border-radius:var(--rs);overflow:hidden}.image-box a{display:block;height:100%}.image-box img{width:100%;height:100%;display:block}.fit-cover{object-fit:cover}.fit-contain{object-fit:contain}
+figcaption,.note{font-size:13px;color:var(--mut);margin:6px 0 0}
+.timeline-row{display:grid;grid-template-columns:minmax(70px,140px) minmax(0,1fr);gap:14px;padding:12px 0}.timeline-row+.timeline-row{border-top:1px solid var(--hair)}.when{font:500 12px/1.5 var(--mono);color:var(--tone)}
+.kv-grid{display:grid;gap:14px;margin:0}.kv-grid dd{margin:6px 0 0}.text .tone-mute{color:var(--mut)}.text .tone-good,.text .tone-warn,.text .tone-bad,.text .tone-info{color:var(--tone)}
+footer{margin-top:40px;font-size:13px;color:var(--mut)}
+@media(max-width:720px){
+ .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .compact,.twocol,.kv-grid{grid-template-columns:minmax(0,1fr)}
+ .flow-row{grid-auto-flow:row;gap:0}.node{flex-direction:row;gap:14px;padding-bottom:16px}.node:last-child{padding-bottom:0}
+ .node:not(:last-child)::after{top:34px;bottom:4px;left:14px;right:auto;width:2px;height:auto}.node .body{padding-top:5px}.rank{font-size:36px}.ranked>.chead{padding-inline-start:48px}
+}
+
+.block.bars{background:var(--panel);border:1px solid var(--hair);border-radius:var(--r);padding:16px}
+.card .block.bars{background:none;border:0;padding:0;margin:10px 0}
+.callout-panel.tone-bad{background:var(--panel);border:1px solid var(--hair)}
+.cardlink{margin:8px 0 0;font-size:14px}
+.verdict{margin-bottom:24px}
+
+/* Ink applies to all report blocks through the shared tokens. */
+[data-page-theme="ink"] h3{font-family:var(--display)}
+[data-page-theme="ink"] .wrap{max-width:1100px;position:relative}
+[data-page-theme="ink"] header{padding-inline-end:76px}
+[data-page-theme="ink"] .tag{background:var(--soft);color:var(--tone)}
+/* Ink orange cannot reach 4.5:1 as text on its own tint, so accent text on a tint uses ink. */
+[data-page-theme="ink"] .chip.tone-accent,[data-page-theme="ink"] .tag.tone-accent,[data-page-theme="ink"] .node.tone-accent .step,[data-page-theme="ink"] .callout-panel.tone-accent .lab{color:var(--ink)}
+[data-page-theme="ink"] a,[data-page-theme="ink"] .fold summary{color:var(--ink);text-decoration-color:var(--acc)}
+[data-page-theme="ink"] .eyebrow{color:var(--ink)}
+button,textarea{font:inherit}
+button{cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.gallery-tabs{position:sticky;top:0;z-index:5;display:flex;gap:18px;max-width:100%;overflow-x:auto;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--hair);scrollbar-width:thin}
+.gallery-tabs a{flex-shrink:0;color:var(--mut);font-size:14px;font-weight:600;text-decoration:none;padding-bottom:4px}
+.gallery-tabs a[aria-current]{color:var(--ink);box-shadow:0 2px 0 var(--acc)}
+.gallery-group{padding:22px 0 6px;margin:0;border:0;scroll-margin-top:65px}
+.gallery-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.gallery-heading h2{font-size:20px;margin:0}
+.gallery-count{color:var(--mut);font-size:12px;white-space:nowrap}
+.gallery-sub{color:var(--mut);font-size:13px;margin:2px 0 12px}
+.gallery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gallery-grid.square{grid-template-columns:repeat(3,minmax(0,1fr))}
+.gallery-tile{display:block;position:relative;background:none;border:0;padding:0;color:var(--ink);text-align:left;width:100%}
+.gallery-tile img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:var(--track);border-radius:6px}
+.square .gallery-tile img{aspect-ratio:1}
+.gallery-caption{display:block;padding:5px 1px 0}
+.gallery-caption b,.gallery-caption small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gallery-caption b{font-size:13px;font-weight:600}
+.gallery-caption small{font-size:12px;color:var(--mut)}
+.square .gallery-caption small{display:none}
+.gallery-flag,.gallery-mark:not(:empty){position:absolute;top:6px;right:6px;padding:2px 7px;border-radius:12px;background:var(--panel);color:var(--warn);font-size:11px;font-weight:700;border:1px solid var(--warn)}
+.gallery-mark{pointer-events:none;text-transform:capitalize}
+.gallery-tile[data-verdict="keep"] .gallery-mark{color:var(--good);background:var(--goods);border-color:var(--good)}
+.gallery-tile[data-verdict="change"] .gallery-mark{color:var(--warn);background:var(--warns)}
+.gallery-tile[data-verdict="redo"] .gallery-mark{color:var(--bad);background:var(--bads);border-color:var(--bad)}
+.gallery-tile[data-verdict]:not([data-verdict=""]) .gallery-flag{display:none}
+body:has(.gallery-bar){padding-bottom:90px}
+/* A shared dock keeps multiple gallery summaries from covering each other. */
+.gallery-dock{position:fixed;bottom:0;left:0;right:0;z-index:6;max-height:30vh;overflow:auto;background:var(--panel);border-top:1px solid var(--hair)}
+.gallery-bar{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.gallery-bar:last-child{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.gallery-bar>div{flex:1;font-size:13px;color:var(--mut)}
+.gallery-save{display:block;font-size:11px}
+.gallery-copy{border:0;background:var(--ink);color:var(--bg);border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700}
+.gallery-copybox{flex-basis:100%;width:100%;background:var(--bg);color:var(--ink)}
+.gallery-open{overflow:hidden}
+.gallery-view{position:fixed;inset:0;width:100%;max-width:none;height:100%;height:100dvh;max-height:none;margin:0;padding:0;border:0;background:#08090a;color:#fff}
+.gallery-view[open]{display:flex;flex-direction:column}
+.gallery-view::backdrop{background:#08090a}
+.gallery-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;font-size:13px}
+.gallery-close{color:#fff;background:none;border:1px solid #777;border-radius:6px;padding:6px 12px}
+.gallery-image{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;padding:8px;touch-action:pan-y}
+.gallery-image img{max-width:100%;max-height:100%;object-fit:contain}
+.gallery-live{width:100%;height:100%;border:0;background:#fff}
+.gallery-image [hidden]{display:none}
+.gallery-panel{background:var(--panel);color:var(--ink);padding:12px 16px calc(14px + env(safe-area-inset-bottom));max-height:55vh;overflow:auto}
+.gallery-panel h3{font:700 18px/1.2 var(--display);margin:0}
+.gallery-line,.gallery-note{font-size:13px;margin:2px 0 0;color:var(--mut);white-space:pre-wrap}
+.gallery-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 8px}
+.gallery-choices button{background:var(--bg);color:var(--ink);border:1px solid var(--hair);border-radius:8px;padding:11px 0;font-size:14px;font-weight:700}
+.gallery-choices [data-verdict="keep"][aria-pressed="true"]{background:var(--goods);color:var(--good);border-color:var(--good)}
+.gallery-choices [data-verdict="change"][aria-pressed="true"]{background:var(--warns);color:var(--warn);border-color:var(--warn)}
+.gallery-choices [data-verdict="redo"][aria-pressed="true"]{background:var(--bads);color:var(--bad);border-color:var(--bad)}
+.gallery-note-label{font-size:12px;color:var(--mut)}
+.gallery-input{display:block;width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--hair);border-radius:8px;padding:9px;font-size:14px;resize:vertical;min-height:44px;max-height:120px}
+.gallery-navigation{display:flex;justify-content:space-between;margin-top:8px}
+.gallery-navigation button{background:none;border:0;color:var(--mut);font-size:14px;padding:6px 0;min-height:36px}
+.wrap:has(.gallery-root)>header h1{font-size:26px}
+.wrap:has(.gallery-root)>header .verdict{font-size:15px;color:var(--mut);margin:6px 0 12px}
+@media(min-width:700px){.gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.gallery-grid.square{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(min-width:1000px){.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.gallery-grid.square{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+[data-page-theme="ink"] .callout-panel.tone-accent{color:#ece8e1}
+[data-page-theme="ink"] .rank,[data-page-theme="ink"] .node.tone-accent .k,[data-page-theme="ink"] .tile.tone-accent .n{color:var(--ink)}
+[data-page-theme="ink"] td.tone-accent,[data-page-theme="ink"] .timeline-row.tone-accent .when{color:var(--ink)}
+
+.gallery-pick{margin:12px 0 4px;padding:12px;background:var(--panel);border:1px solid var(--hair);border-radius:8px}
+.gallery-pick-opts{display:flex;flex-wrap:wrap;gap:8px}
+.gallery-pick-opt{display:flex;align-items:center;gap:6px;border:1px solid var(--hair);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:600;background:var(--bg);cursor:pointer}
+.gallery-pick-opt:has(input:checked){border-color:var(--good);background:var(--goods);color:var(--good)}
+.gallery-rec{font-size:13px;color:var(--mut);margin:8px 0 0}
+.gallery-pick-note{display:block;width:100%;margin-top:8px;background:var(--bg);color:var(--ink);border:1px solid var(--hair);border-radius:8px;padding:9px;font-size:14px;resize:vertical;min-height:44px;max-height:120px}
+</style><link rel="stylesheet" href="observatory/friends.css"></head><body data-page-theme="ink"><main class="wrap"><button type="button" class="theme-switch" aria-label="Switch to dark mode">Dark</button><header><p class="eyebrow">Northern Thailand · Field guide</p><h1>Chiang Mai Weather Atlas</h1><p class="verdict">Explore today’s forecast around Chiang Mai, or replay a saved weather system from the ridge to the globe. <a href="observatory.html" rel="noopener noreferrer">Open the 3D atlas ↗</a></p></header><div class="block images"><div class="image-grid" style="--image-min:270px"><figure><div class="image-box"><a href="observatory.html" rel="noopener noreferrer"><img class="fit-cover" src="observatory/guide-basin.jpg" alt="3D terrain of the Chiang Mai basin and western ridge" loading="lazy"></a></div><figcaption>Basin · Follow the western mountain ridge.</figcaption></figure><figure><div class="image-box"><a href="observatory.html?view=crag" rel="noopener noreferrer"><img class="fit-cover" src="observatory/guide-crag.jpg" alt="Oblique detail of Crazy Horse Buttress" loading="lazy"></a></div><figcaption>Crazy Horse · Explore limestone terrain east of town.</figcaption></figure><figure><div class="image-box"><a href="observatory.html?view=region&amp;weather=replay&amp;chart=composite" rel="noopener noreferrer"><img class="fit-cover" src="observatory/guide-region.jpg" alt="Regional map across mainland Southeast Asia" loading="lazy"></a></div><figcaption>Southeast Asia · Read the cloud and pressure chart.</figcaption></figure></div></div>
+<section class="block section"><h2>Start at your house</h2><div class="block flow"><ol class="flow-row"><li class="node tone-accent"><span class="step">1</span><span class="body"><span class="k">My house</span><span class="v">Tap the map or paste latitude, longitude.</span></span></li><li class="node tone-accent"><span class="step">2</span><span class="body"><span class="k">Save</span><span class="v">Orbit the terrain around your pin.</span></span></li><li class="node tone-accent"><span class="step">3</span><span class="body"><span class="k">Scrub time</span><span class="v">Compare rain, clouds and wind through time.</span></span></li></ol></div>
+<div class="block text"><div class="tone-accent size-normal"><p class="">Your pin stays in this browser. <b>Current forecast</b> uses the nearest of three public reference cells and shows its distance. <b>Saved replay</b> samples the archived provincial grid. Use <b>Change pin</b> or <b>Forget pin</b> at any time.</p></div></div>
+</section>
+<section class="block section"><h2>Read the landscape</h2><div class="block cards"><div class="card-grid compact cols-2"><article class="card"><div class="chead"><h3>Orbit the ridge</h3><div class="meta"></div></div><p class="">Drag to rotate and scroll or pinch to zoom. Switch Drag mode to Move to slide across the map. At local scale the ruler shows the terrain’s vertical exaggeration.</p></article><article class="card"><div class="chead"><h3>Find the sunset</h3><div class="meta"></div></div><p class="">Turn on Sun path and choose Face sunset. Move Solar time to watch the Sun meet the terrain horizon. Shadows account for relief. Trees and buildings can change the view on the ground.</p></article><article class="card"><div class="chead"><h3>Follow a cloud</h3><div class="meta"></div></div><p class="">Compare the low, middle and high cloud bands. Near the basin, cloud envelopes appear in humid pressure layers with modeled cloud cover. Their shapes represent conditions across a model cell.</p></article><article class="card"><div class="chead"><h3>Track the rain</h3><div class="meta"></div></div><p class="">Check the model cell for the previous hour’s rain. In Saved replay, Hourly rain paints the province. Six-hour rain on the Southeast Asia chart sums a longer interval.</p></article></div></div>
+</section>
+<section class="block section"><h2>Compare the scales</h2><div class="block cards"><div class="card-grid compact cols-2"><article class="card"><div class="chead"><h3>Mountains and wind</h3><div class="meta"></div></div><p class="">Try 925 hPa for lower air, then 700 hPa above the ridge. Arrows point downwind. Changing pressure can reveal a turn in wind direction with height.</p></article><article class="card"><div class="chead"><h3>Regional systems</h3><div class="meta"></div></div><p class="">Choose Saved replay, open Southeast Asia, then choose Pressure. Isobars join equal sea-level pressure. Switch to cloud or rain to see where those fields overlap.</p></article><article class="card"><div class="chead"><h3>Model vs. station</h3><div class="meta"></div></div><p class="">Open Model cells &amp; airport report. Each ICON cell has a fixed center and elevation. Saved replay also gives the timestamp of the airport’s VTCC observation when one was recorded.</p></article><article class="card"><div class="chead"><h3>Read both clocks</h3><div class="meta"></div></div><p class="">The weather slider steps by one hour. Regional GFS frames are six hours apart. The inspector gives the frame’s valid time and its forecast run. All displayed times use Chiang Mai time.</p></article></div></div>
+</section>
+<section class="block section"><h2 id="credits">Sources and credits</h2><div class="block text"><div class="tone-accent size-normal"><p class="">When the viewer opens, it requests DWD ICON Global via Open-Meteo for three fixed public locations: Chiang Mai Old City, Doi Suthep and Crazy Horse Buttress. Refresh forecast checks again. The saved November 2026 replay includes regional NOAA GFS charts, provincial ICON samples and VTCC airport observations from NOAA Aviation Weather Center. The request contains only those three public coordinates.</p></div></div>
+<div class="block text"><div class="tone-accent size-normal"><p class="">Sentinel-2 cloudless 2024 by EOX IT Services GmbH contains modified Copernicus Sentinel data 2024. Imagery was reprojected, color graded and relief shaded. Those adaptations are shared under CC BY-NC-SA 4.0. Terrain uses Mapzen Terrarium with USGS SRTM and GMTED2010, NOAA ETOPO1 and regional contributors. Natural Earth supplies public-domain basemaps. Provincial boundaries use geoBoundaries (Runfola et al., 2020), CC BY 4.0. Crazy Horse map features © OpenStreetMap contributors, ODbL. Open-Meteo weather data are distributed under CC BY 4.0.</p></div></div>
+<div class="block fold"><details class="fold"><summary>Detailed terrain attribution</summary><p class="">The crag terrain was produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved. <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md" rel="noopener noreferrer">Terrain Tiles source attributions</a> · <a href="https://doi.org/10.5270/ESA-c5d3d65" rel="noopener noreferrer">Copernicus DEM licence and citation</a> · <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer">CC BY 4.0</a>.</p></details></div>
+<footer class="block footer">Sources: <a href="https://open-meteo.com/en/docs/dwd-api" rel="noopener noreferrer">DWD ICON via Open-Meteo</a>; <a href="https://registry.opendata.aws/noaa-gfs-bdp-pds/" rel="noopener noreferrer">NOAA GFS</a>; <a href="https://aviationweather.gov/data/api/" rel="noopener noreferrer">NOAA airport reports</a>; <a href="https://cloudless.eox.at/" rel="noopener noreferrer">EOX cloudless</a>; <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener noreferrer">CC BY-NC-SA 4.0</a>; <a href="https://registry.opendata.aws/terrain-tiles/" rel="noopener noreferrer">Terrain Tiles</a>; <a href="https://registry.opendata.aws/copernicus-dem/" rel="noopener noreferrer">Copernicus DEM</a>; <a href="https://www.naturalearthdata.com/" rel="noopener noreferrer">Natural Earth</a>; <a href="https://www.geoboundaries.org/" rel="noopener noreferrer">geoBoundaries</a>; <a href="https://www.openstreetmap.org/copyright" rel="noopener noreferrer">OpenStreetMap</a></footer>
+</section>
+</main></body></html>
