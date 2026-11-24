@@ -22,6 +22,52 @@
   let place='window', packet, times, index=0, solarMinute=null, timer=null, house;
   const compact=matchMedia('(max-width:840px), (max-height:520px) and (pointer:coarse)');
   const dock=el('map-dock'), glance=el('weather-glance'), consoleBar=document.querySelector('.phone-console');
+  const scaleControl=el('scale-control'), scaleTrigger=el('scale-trigger'), scalePanel=el('scale-popover');
+  const scaleSlider=el('map-scale'), scaleLabel=el('scale-label');
+  const scaleStops=Array.from(scalePanel.querySelectorAll('[data-scale-stop]'));
+  const minScale=Number(scaleSlider.min),maxScale=Number(scaleSlider.max);
+  function stopPosition(button){
+    if(button.dataset.scaleStop==='window'){
+      if(place==='crag')return .19;
+      if(place==='house')return .30;
+    }
+    return Number(button.dataset.position);
+  }
+  const labelAt=value=>scaleStops[value<.71?0:value<1.51?1:value<2.51?2:3].textContent;
+  const percentage=value=>Math.max(0,Math.min(100,Math.round((value-minScale)*100/(maxScale-minScale))));
+  function showScalePanel(open,returnFocus=false){
+    scalePanel.hidden=!open;
+    document.body.toggleAttribute('data-scale-open',open);
+    scaleTrigger.setAttribute('aria-expanded',String(open));
+    if(open)scaleSlider.focus({preventScroll:true});
+    else if(returnFocus)scaleTrigger.focus({preventScroll:true});
+  }
+  function presentZoom(position,target=position){
+    if(!Number.isFinite(position)||!Number.isFinite(target))return;
+    const currentLabel=labelAt(position);
+    if(scaleLabel.textContent!==currentLabel)scaleLabel.textContent=currentLabel;
+    const progress=percentage(position)+'%';
+    if(scaleControl.style.getPropertyValue('--scale-progress')!==progress)scaleControl.style.setProperty('--scale-progress',progress);
+    const nextValue=Math.round(target*100)/100;
+    if(scaleSlider.valueAsNumber!==nextValue)scaleSlider.valueAsNumber=nextValue;
+    const description=labelAt(target)+', '+percentage(target)+'% of zoom range from local to globe';
+    if(scaleSlider.getAttribute('aria-valuetext')!==description)scaleSlider.setAttribute('aria-valuetext',description);
+    for(const button of scaleStops){
+      const pressed=String(stopPosition(button)===nextValue);
+      if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);
+    }
+  }
+  scaleTrigger.onclick=()=>showScalePanel(scalePanel.hidden);
+  scaleControl.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!scalePanel.hidden){
+      event.preventDefault();event.stopPropagation();showScalePanel(false,true);
+    }
+  });
+  function closeScaleOutside(event){
+    if(!scalePanel.hidden&&!scaleControl.contains(event.target))showScalePanel(false);
+  }
+  document.addEventListener('pointerdown',closeScaleOutside);
+  document.addEventListener('focusin',closeScaleOutside);
   const sheets=Array.from(document.querySelectorAll('.map-sheet'));
   const placeNames={window:'Chiang Mai basin',crag:'Crazy Horse',province:'Chiang Mai province',region:'Southeast Asia',global:'Globe',house:'My location'};
   let activeSheet=null, opener=null, selectedCell=false;
@@ -41,6 +87,7 @@
     if(!compact.matches)name=null;
     const previous=activeSheet, returnTo=opener;
     activeSheet=name;
+    if(name&&!scalePanel.hidden)showScalePanel(false);
     if(name)opener=trigger||dock.querySelector('[data-sheet="'+name+'"]');
     document.body.toggleAttribute('data-sheet-open',Boolean(name));
     for(const sheet of sheets)sheet.toggleAttribute('data-open',sheet.id==='sheet-'+name);
@@ -93,12 +140,18 @@
     try{return window.parent!==window&&Boolean(window.parent.atlasAttachment)}catch{return false}
   }
   const portable=attachment();
-  const world=AtlasWorld.mount(el('orbit'),{initialView:'terrain',onPlace:pickPlace,onScaleChange:scale=>{
-    if(scale!=='window'&&house?.active)house.deactivate();
-    if(scale!=='window'||!['crag','house'].includes(place))place=scale;
+  const world=AtlasWorld.mount(el('orbit'),{initialView:'terrain',continuousZoom:true,onZoomChange:presentZoom,onPlace:pickPlace,onScaleChange:scale=>{
+    // Zoom changes framing. An explicit destination change replaces the local anchor.
+    if(!['crag','house'].includes(place))place=scale;
     if(scale==='window')el('systems').value='terrain';
     markPlaces();applyLayers();
   }});
+  el('orbit').querySelector('.aw-stage').append(scaleControl);
+  scaleControl.hidden=false;
+  const initialView=world.getView();
+  presentZoom(initialView.position,initialView.target);
+  scaleSlider.oninput=()=>world.setZoomPosition(scaleSlider.valueAsNumber);
+  for(const button of scaleStops)button.onclick=()=>world.setZoomPosition(stopPosition(button),{fly:true});
   house=AtlasHouse.mount({world,panel:el('house-panel'),onFocus(){
     selectedCell=false;place='house';el('systems').value='terrain';markPlaces();applyLayers();readHouse();
     if(compact.matches){
@@ -163,7 +216,7 @@
   }
   for(const id of ['cloud','wind','localRain','sunPath','shadows','roads','rivers','labels','band','gesture'])el(id).onchange=applyLayers;
   el('systems').onchange=()=>{
-    if(el('systems').value!=='terrain'&&['window','crag','house'].includes(place))pickPlace('region');
+    if(el('systems').value!=='terrain'&&world.getView().scale==='window')world.setZoomPosition(2,{fly:true});
     applyLayers();
   };
   el('minute').oninput=()=>{stop();solarMinute=+el('minute').value;applySun();world.keepSunInView(solarTime())};

@@ -134,6 +134,7 @@ function mount(container,options={}){
  }
  const initialTerrain=true;
  let photoMode=!initialTerrain,dolly=false,pinching=false;
+ let dollyCarry=null,reportedPosition,reportedTarget;
  const touches=new Map();
  let cv=q('canvas'),disposed=false,state={peak:'mon-long',columns:[],level:850,cloudBase:null,scenario:false},scale='window',orbit=initialTerrain;
  let t=initialTerrain?.36:0,target=t,transition=null,heading=0,tilt=0,zoom=1,spin=0,drag=null,last=0,raf=0,idleTimer=0,visible=true;
@@ -279,7 +280,7 @@ function mount(container,options={}){
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  if(reduced)flags.spin=false;
  flags.animate=!reduced&&!navigator.connection?.saveData;
- function travel(to){if(observer){observer=null;options.onObserverChange?.(null)}dolly=false;target=to;transition={from:t,capture:cam,start:performance.now(),duration:reduced?0:clamp(Math.abs(target-t)*720,570,2350)};queue()}
+ function travel(to){dollyCarry=null;if(observer){observer=null;options.onObserverChange?.(null)}dolly=false;target=to;transition={from:t,capture:cam,start:performance.now(),duration:reduced?0:clamp(Math.abs(target-t)*720,570,2350)};queue()}
  function notifyScale(id){const changed=id!==scale;scale=id;scaleControls();syncFrames();describe();if(changed)options.onScaleChange?.(id)}
  function setScale(id){if(!scales.includes(id))return;clearHousePoint();resetPan();photoMode=id==='window'&&!initialTerrain;orbit=!photoMode;zoom=1;travel(id==='window'?(photoMode?0:.36):scales.indexOf(id));notifyScale(id)}
 
@@ -359,12 +360,23 @@ function mount(container,options={}){
   travel(.30);notifyScale('window');
  }
  function orbitLocal(){photoMode=false;orbit=true;travel(.36);notifyScale('window')}
+ function setZoomPosition(position,{fly=false}={}){
+  if(!finite(position))return;
+  const next=clamp(position,.18,3.35);
+  photoMode=false;orbit=true;
+  if(fly){travel(next);transition.followScale=true;return}
+  // Preserve the displayed pose when a hand gesture interrupts a flight or leaves the horizon.
+  if(!reduced&&cam&&(observer||transition?.capture))
+   dollyCarry={capture:cam,start:performance.now(),duration:180};
+  if(observer){observer=null;zoom=1;options.onObserverChange?.(null)}
+  transition=null;target=next;dolly=true;queue();
+ }
  function zoomBy(factor){
   if(!finite(factor)||factor<=0)return;
-  if(observer){zoom=clamp(zoom*factor,.6,4);softKey='';queue();return}
-  if(photoMode){photoMode=false;orbit=true;target=Math.max(t,.18)}
-  if(transition){target=Math.max(t,.18);transition=null}
-  target=clamp(target-Math.log(factor)*.255,.18,housePoint ? .68 : 3.35);dolly=true;queue();
+  if(observer&&!options.continuousZoom){zoom=clamp(zoom*factor,.6,4);softKey='';queue();return}
+  const from=transition||photoMode?Math.max(t,.18):target;
+  const limit=housePoint && !options.continuousZoom ? .68 : 3.35;
+  setZoomPosition(clamp(from-Math.log(factor)*.255,.18,limit));
  }
  for(const id of scales){const b=document.createElement('button');b.type='button';b.textContent=id[0].toUpperCase()+id.slice(1);b.onclick=()=>setScale(id);q('.aw-flight').append(b)}
  for(const [key,text] of Object.entries({terrain:'Terrain',cloud:'Cloud volumes',wind:'Wind',animate:'Animate wind (120×)',parcel:'Parcel base',trace:'Fitted skyline',spin:'Rotate globe',satellite:'JMA infrared',radar:'TMD radar',planet:'Global modeled cloud cover'})){
@@ -936,7 +948,8 @@ function mount(container,options={}){
   const A=keys[i],B=keys[i+1],a=clamp((t-A.t)/(B.t-A.t),0,1),f=smooth(a),tar=lerp(A.tar,B.tar,f),d=Math.exp(mix(Math.log(A.d),Math.log(B.d),a));
   const off=norm(lerp(A.off,B.off,f));let eye=add(tar,mul(off,d)),F=mul(off,-1),Uguess=norm(lerp(A.up,B.up,f));
   eye=sub(rotateVector(panRotation,add(eye,[0,0,R])),[0,0,R]);F=rotateVector(panRotation,F);Uguess=rotateVector(panRotation,Uguess);
-  const carry=transition?.capture,release=carry?smooth((performance.now()-transition.start)/Math.min(260,transition.duration||1)):1;
+  const blendPose=transition||dollyCarry,carry=blendPose?.capture;
+  const release=carry?smooth((performance.now()-blendPose.start)/Math.min(260,blendPose.duration||1)):1;
   if(carry&&release<1){eye=lerp(carry.eye,eye,release);F=norm(lerp(carry.F,F,release));Uguess=norm(lerp(carry.up,Uguess,release))}
   const point=observer?.point,localUp=point?norm(add(geo(point.lon,point.lat),[0,0,R])):[0,0,1];
   const east=point?norm(sub(geo(point.lon+.0001,point.lat),geo(point.lon-.0001,point.lat))):[1,0,0],north=norm(cross(localUp,east));
@@ -1405,7 +1418,7 @@ function mount(container,options={}){
  function display(c){
   const pk=peaks[state.peak];placeCrag(c);
   const atHome=t>=.18&&t<.72?c.project(geo(98.985,18.79,poseGround/1000+.02)):null;
-  const atHouse=housePoint&&c.project(geo(housePoint.lon,housePoint.lat,elevation(housePoint.lon,housePoint.lat)/1000+.005));
+  const atHouse=housePoint&&t<1.51&&c.project(geo(housePoint.lon,housePoint.lat,elevation(housePoint.lon,housePoint.lat)/1000+.005));
   houseTag.hidden=!atHouse||atHouse[0]<8||atHouse[0]>c.w-8||atHouse[1]<8||atHouse[1]>c.h-24;
   if(!houseTag.hidden){houseTag.style.left=atHouse[0]+'px';houseTag.style.top=atHouse[1]+'px'}
   homeTag.hidden=!!housePoint||!!observer||!!landmark||!mapLayers.markers||!atHome||atHome[0]<10||atHome[0]>c.w-12||atHome[1]<44||atHome[1]>c.h-36;
@@ -1424,19 +1437,26 @@ function mount(container,options={}){
    const ok=mapLayers.labels&&screen&&dot(norm(add(v.p,[0,0,R])),sub(c.eye,v.p))>0&&screen[0]>38&&screen[0]<c.w-38&&screen[1]>63&&screen[1]<c.h-56&&!used.some(([x,y])=>Math.abs(x-screen[0])<72&&Math.abs(y-screen[1])<19);
    v.el.hidden=!ok;if(ok){v.el.style.left=screen[0]+'px';v.el.style.top=screen[1]+'px';used.push(screen)}
   }
-  tag.hidden=!!housePoint||(!!landmark&&stage.classList.contains('scene-air-crag'))||(stage.dataset.summitHeights==='true'&&!landmark&&t<.72)||(landmark==='crag'&&!cragPin.hidden&&t<.8)||!mapLayers.markers||!pt||pt[0]<0||pt[0]>c.w||pt[1]<0||pt[1]>c.h;
+  tag.hidden=!!atHouse||(!!landmark&&stage.classList.contains('scene-air-crag'))||(stage.dataset.summitHeights==='true'&&!landmark&&t<.72)||(landmark==='crag'&&!cragPin.hidden&&t<.8)||!mapLayers.markers||!pt||pt[0]<0||pt[0]>c.w||pt[1]<0||pt[1]>c.h;
   if(!tag.hidden){tag.textContent=label;tag.style.left=clamp(pt[0],0,c.w-95)+'px';tag.style.top=clamp(pt[1],49,c.h-16)+'px'}
-  ruler.textContent=housePoint?(observer?'My house · observer height':'My house · true terrain height'):observer?.mode==='solar'&&scale==='province'?'Province · horizon view':observer?(landmark?'Crazy Horse':'Old City')+' · observer height':t<.8?(landmark?cragSites.get(landmark).name+' · true height':'Basin relief · '+c.ve.toFixed(1)+'× height'):t<1.55?'Chiang Mai Province':t<2.55?'Mainland Southeast Asia':'Earth · '+(reduced?'reduced motion':flags.spin?'rotating':'rotation paused');
+  ruler.textContent=housePoint&&t<.71?(observer?'My house · observer height':'My house · true terrain height'):observer?.mode==='solar'&&scale==='province'?'Province · horizon view':observer?(landmark?'Crazy Horse':'Old City')+' · observer height':t<.8?(landmark?cragSites.get(landmark).name+' · true height':'Basin relief · '+c.ve.toFixed(1)+'× height'):t<1.55?'Chiang Mai Province':t<2.55?'Mainland Southeast Asia':'Earth · '+(reduced?'reduced motion':flags.spin?'rotating':'rotation paused');
  }
  let solarTint=[1,1,1],solarVector=null,solarPoint=null;
  function draw(now){
   raf=0;if(disposed||!visible)return;
+  const followScale=dolly||transition?.followScale;
+  if(dollyCarry&&now>=dollyCarry.start+dollyCarry.duration)dollyCarry=null;
   if(dolly){
    const dt=clamp(now-(last||now-16),2,64);t=reduced?target:mix(t,target,1-Math.exp(-dt/76));
    if(Math.abs(t-target)<.0004){t=target;dolly=false}
-   const id=t<.71?'window':t<1.51?'province':t<2.51?'region':'global';if(id!==scale)notifyScale(id);
   }
   if(transition){const f=transition.duration?clamp((now-transition.start)/transition.duration,0,1):1;t=mix(transition.from,target,smooth(f));if(f===1){t=target;transition=null}}
+  if(followScale){
+   const id=t<.71?'window':t<1.51?'province':t<2.51?'region':'global';if(id!==scale)notifyScale(id);
+  }
+  if(t!==reportedPosition||target!==reportedTarget){
+   reportedPosition=t;reportedTarget=target;options.onZoomChange?.(t,target);
+  }
   if(scale==='global'&&!transition&&flags.spin&&!drag&&!reduced&&last)spin+=Math.min(64,now-last)*.0015;last=now;
   const w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;const dpr=Math.min(1.75,devicePixelRatio||1);
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
@@ -1466,7 +1486,7 @@ function mount(container,options={}){
   if(mapLayers.borders&&t>.65&&t<2&&boundary.length)paint(boundary,[.96,.83,.58],.58*smooth((t-.65)/.18)*(1-smooth((t-1.50)/.50)),'LINES');
   sunScene?.draw(cam,t,sunTime,!!observer,observer?.point);drawImagery(cam);countryOutlines(cam);drawFeature(cam);drawSystems(cam);positionFeature(cam);drawSightline(cam);drawWeather(cam);drawPlanetWind(cam);display(cam);
   if(overlays.size){const ctx={camera:cam,geo,elevation,paint,stage,isTerrainVisible,terrainDepthRevision:gpu?'webgl/'+flags.terrain+'/'+mapLayers.terrain+'/'+!!images.southeastRelief:softDepth?.revision??'sphere',rainAnimated:cloudMotion&&!reduced,wind,windEnabled:flags.wind,windAnimated:flags.animate&&!reduced,flowDrawn,weatherMode,time:sunTime,scale,position:t,requestDraw:queue,housePoint,landmark,peak:state.peak,labels:mapLayers.labels,mapLayers,ridgeMarks:mapLayers,state,observer:observer?.point||null,projectDirection:cam.direction};for(const layer of overlays)layer(ctx)}
-  if(dolly||transition||cloudRenderMode==='raymarch'&&gpu?.cloudTransition||cloudRenderer?.isTransitioning())queue();
+  if(dolly||dollyCarry||transition||cloudRenderMode==='raymarch'&&gpu?.cloudTransition||cloudRenderer?.isTransitioning())queue();
   else if(!drag){
    const software=!gpu||gpu.cloudStats?.software,delays=[];
    if(!reduced&&scale==='global'&&flags.spin)delays.push(software?150:60);
@@ -1521,7 +1541,7 @@ function mount(container,options={}){
  bind();const ro=new ResizeObserver(queue);ro.observe(stage);
  const io=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;syncVisibility()});io.observe(stage);document.addEventListener('visibilitychange',syncVisibility);
  scaleControls();collect();queue();
- return {update,focusHousePoint,clearHousePoint,terrainElevation:elevation,setRainSurface,setWindMarkOverlay(value){windMarkOverlay=!!value;queue()},addOverlay,keepSunInView,leaveSolarHorizon,focusSolarHorizon,focusProvincePoint,faceWindow,faceSunset,faceBearing,setSkyPath(value){sunScene?.setTrack(value);queue()},setHiddenPatches,setCloudOpacity,setCloudStyle,setCloudMotion,setFlowLayer,setSolarLayers,recenter:reset,setGesture,setMapLayers,setLandmark,retrySystems,setWeatherMode,setSystemLayer,setSystemFeature,setCloudBand,setScale,setPeak,zoomBy,focusRidge,destroy(){disposed=true;document.removeEventListener('visibilitychange',syncVisibility);if(idleTimer)clearTimeout(idleTimer);systemRecord.abort?.abort();if(raf)cancelAnimationFrame(raf);ro.disconnect();io.disconnect();Object.values(frameState).forEach(v=>{v.abort?.abort();v.bitmap?.close?.()});gpu?.destroy();cloudRenderer?.destroy();root.remove()},
+ return {update,focusHousePoint,clearHousePoint,terrainElevation:elevation,setRainSurface,setWindMarkOverlay(value){windMarkOverlay=!!value;queue()},addOverlay,keepSunInView,leaveSolarHorizon,focusSolarHorizon,focusProvincePoint,faceWindow,faceSunset,faceBearing,setSkyPath(value){sunScene?.setTrack(value);queue()},setHiddenPatches,setCloudOpacity,setCloudStyle,setCloudMotion,setFlowLayer,setSolarLayers,recenter:reset,setGesture,setMapLayers,setLandmark,retrySystems,setWeatherMode,setSystemLayer,setSystemFeature,setCloudBand,setScale,setPeak,zoomBy,setZoomPosition,focusRidge,destroy(){disposed=true;document.removeEventListener('visibilitychange',syncVisibility);if(idleTimer)clearTimeout(idleTimer);systemRecord.abort?.abort();if(raf)cancelAnimationFrame(raf);ro.disconnect();io.disconnect();Object.values(frameState).forEach(v=>{v.abort?.abort();v.bitmap?.close?.()});gpu?.destroy();cloudRenderer?.destroy();root.remove()},
    getView(){return {housePoint:housePoint&&{...housePoint},localRainSurface:rainStrength()>0,regionalAtmosphere:regionInformation(),provinceCloudTime:provinceClouds?.valid??null,provinceCloudBands:provinceClouds?.bands??[],provinceCloudReport:provinceReport,provincePoint:provincePoint?.slice()||null,solarHorizon:observer?.mode==='solar',solarSite:observer?.point??null,observerMode:observer?.mode==='solar'?null:observer?.mode??null,scale,cloudRenderMode,cloudStats:gpu?.cloudStats??null,cloudGPU:cloudRenderMode==='raymarch'?gpu?.cloudCount:null,cragDetail:!!cragDetail,cragImage:!!images.cragOpt,cloudStyle,cloudMotion,flowEnabled,flowAnimated,flowVariable,cloudOpacity,featureCells:systemFeature?.mesh?.points.length||0,featureEdges:systemFeature?.mesh?.edges.length||0,panRotation:[...panRotation],gesture,landmark,mapLayers:{...mapLayers,wind:flags.wind,cloud:flags.cloud},weatherMode,cloudBand,systemLayer,systemStatus:systemRecord.status,position:t,target,photoMode,renderer:!rendererStarted?'pending':gpu?'webgl':'canvas2d',cloudVolumes:weather.length,windSamples:wind.length,selectedVolume:choice,imagery:Object.fromEntries(Object.entries(frameState).map(([k,v])=>[k,v.status]))}}};
 }
 return {mount,regionalRainStops};
